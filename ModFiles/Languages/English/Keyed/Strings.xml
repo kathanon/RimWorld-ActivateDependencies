@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+	<kathanon.ActivateDependencies.Active>Active</kathanon.ActivateDependencies.Active>
+	<kathanon.ActivateDependencies.Activate>Activate dependencies</kathanon.ActivateDependencies.Activate>
+	<kathanon.ActivateDependencies.ActivateAll>Activate all dependencies</kathanon.ActivateDependencies.ActivateAll>
+	
+	<kathanon.ActivateDependencies.ClickActivate>Click to activate.</kathanon.ActivateDependencies.ClickActivate>
+	<kathanon.ActivateDependencies.ClickDeactivate>Click to deactivate.</kathanon.ActivateDependencies.ClickDeactivate>
+</LanguageData>

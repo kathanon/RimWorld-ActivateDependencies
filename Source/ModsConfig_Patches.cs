@@ -10,7 +10,7 @@ namespace ActivateDependencies
 {
     public enum Anchor { TL, TC, TR, CL, C, CR, BL, BC, BR }
 
-    [HarmonyPatch(typeof(Page_ModsConfig), nameof(Page_ModsConfig.DoWindowContents))]
+    [HarmonyPatch(typeof(Page_ModsConfig))]
     public static class ModsConfig_Patches
     {
         public const float Margin = 17f;
@@ -30,9 +30,14 @@ namespace ActivateDependencies
         public const float CheckboxGap = 4f;
         public const float CheckboxSize = Widgets.CheckboxSize;
 
-        public static void Postfix(Rect rect, Page_ModsConfig __instance, Dictionary<string, string> ___truncatedModNamesCache, bool ___anyReqsCached)
+        private static Dictionary<string, string> cache;
+
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(Page_ModsConfig.DoWindowContents))]
+        public static void DoWindowContents(
+            Rect rect, Page_ModsConfig __instance, Dictionary<string, string> ___truncatedModNamesCache, bool ___anyReqsCached)
         {
-            Dictionary<string, string> cache = ___truncatedModNamesCache;
+            cache = ___truncatedModNamesCache;
             bool hasReqs = ___anyReqsCached;
             ModMetaData mod = __instance.selectedMod;
             if (mod != null && !mod.Official)
@@ -41,18 +46,34 @@ namespace ActivateDependencies
                 Rect modArea = new Rect(ModAreaX, ModAreaY, rect.width - ModAreaWidthAdj, rect.height - ModAreaHeightAdj);
                 if (FindCrossPromotionMods.IsCrossPromotion(mod))
                 {
-                    DoCrossPromotionContent(modArea, mod, cache);
+                    DoCrossPromotionContent(modArea, mod);
                 }
                 else
                 {
-                    DoNormalContent(modArea, mod, cache, hasReqs);
+                    DoNormalContent(modArea, mod, hasReqs);
                 }
             }
 
-            ActivateAllButton(rect, cache);
+            ActivateAllButton(rect);
         }
 
-        private static void DoNormalContent(Rect modArea, ModMetaData mod, Dictionary<string, string> cache, bool hasReqs)
+        [HarmonyPrefix]
+        [HarmonyPatch("DrawRequirementEntry")]
+        public static void DrawRequirementEntry(ModRequirement entry, Rect entryRect)
+        {
+            var mod = ModDependencyInfo.ModFor(entry as ModDependency);
+            if (mod != null)
+            {
+                Rect icon = new Rect(entryRect.xMax - CheckboxSize - CheckboxGap, entryRect.y + 1f, CheckboxSize, CheckboxSize);
+                if (Widgets.ButtonInvisible(icon))
+                {
+                    ToggleMod(mod, !mod.Active);
+                }
+                ModDependency_Patches.InIcon = Mouse.IsOver(icon);
+            }
+        }
+
+        private static void DoNormalContent(Rect modArea, ModMetaData mod, bool hasReqs)
         {
             float stepOver = TitleHeight + Gap;
 
@@ -83,13 +104,13 @@ namespace ActivateDependencies
             if (steamButtons) stepOver += SteamButtonsHeight;
             if (!mod.IsCoreMod) stepOver += Text.LineHeight;
             var anchor = hasReqs ? Anchor.TC : Anchor.BC;
-            ActiveCheck(modArea.width / 2, stepOver, anchor, mod, cache);
+            ActiveCheck(modArea.width / 2, stepOver, anchor, mod);
 
             // Do requirements
             if (hasReqs)
             {
                 var dep = ModDependencyInfo.For(mod);
-                if (!dep.DeepSatisfied)
+                if (!dep.DeepAllActive)
                 {
                     float x = steamButtons ? modArea.width - SteamButtonsWidth : modArea.width / 2;
                     anchor = steamButtons ? Anchor.TR : Anchor.TC;
@@ -103,21 +124,21 @@ namespace ActivateDependencies
             Widgets.EndGroup();
         }
 
-        private static void DoCrossPromotionContent(Rect modArea, ModMetaData mod, Dictionary<string, string> cache)
+        private static void DoCrossPromotionContent(Rect modArea, ModMetaData mod)
         {
             modArea.width = modArea.width * 2 / 3 - 20f;
             modArea.yMin += modArea.width * mod.PreviewImage.height / mod.PreviewImage.width + 6f;
-            ActiveCheck(modArea.x, modArea.y, Anchor.TL, mod, cache);
+            ActiveCheck(modArea.x, modArea.y, Anchor.TL, mod);
         }
 
-        private static void ActiveCheck(float x, float y, Anchor anchor, ModMetaData mod, Dictionary<string, string> cache)
+        private static void ActiveCheck(float x, float y, Anchor anchor, ModMetaData mod)
         {
             bool active = mod.Active;
             Text.Anchor = TextAnchor.UpperLeft;
             float activeWidth = Text.CalcSize(Strings.Active).x + CheckboxGap + CheckboxSize;
             Rect rect = Anchored(anchor, x, y, activeWidth, CheckboxSize);
             Widgets.CheckboxLabeled(rect, Strings.Active, ref active);
-            if (active != mod.Active) ToggleMod(mod, active, cache);
+            if (active != mod.Active) ToggleMod(mod, active);
         }
 
         private static bool ActivateMissing(float x, float y, Anchor anchor, ModDependencyInfo dependencies)
@@ -132,11 +153,11 @@ namespace ActivateDependencies
             return change;
         }
 
-        private static void ActivateAllButton(Rect rect, Dictionary<string, string> cache)
+        private static void ActivateAllButton(Rect rect)
         {
             Rect buttonRect = new Rect(rect.x + Margin, rect.yMax - ListAreaHeightAdj, ListButtonWidth, ListButtonHeight);
             Color color = GUI.color;
-            bool active = ModDependencyInfo.AnyUnfulfilled;
+            bool active = ModDependencyInfo.AnyToActivate;
             if (!active)
             {
                 var dimmed = color * 0.4f;
@@ -146,7 +167,7 @@ namespace ActivateDependencies
             if (Widgets.ButtonText(buttonRect, Strings.ActivateAll, doMouseoverSound: active, active: active))
             {
                 bool change = false;
-                foreach (var info in ModDependencyInfo.Unfulfilled)
+                foreach (var info in ModDependencyInfo.ToActivate)
                 {
                     if (ActivateAllFor(info)) change = true;
                 }
@@ -163,12 +184,12 @@ namespace ActivateDependencies
         private static bool ActivateAllFor(ModDependencyInfo dependencies)
         {
             bool change = false;
-            foreach (var dep in dependencies.DeepUnsatisfied)
+            foreach (var dep in dependencies.DeepInactive)
             {
                 var info = ModDependencyInfo.For(dep);
                 if (info != null && info.Installed && !info.Active)
                 {
-                    ToggleMod(info.Mod, true, null);
+                    ToggleMod(info.Mod, true, false);
                     change = true;
                 }
             }
@@ -186,7 +207,7 @@ namespace ActivateDependencies
         private static float SteamButtonsWidth => 
             2f * ButtonExtraWidth + Text.CalcSize("Unsubscribe".Translate()).x + Text.CalcSize("WorkshopPage".Translate()).x;
 
-        private static void ToggleMod(ModMetaData mod, bool active, Dictionary<string, string> cache)
+        private static void ToggleMod(ModMetaData mod, bool active, bool clearCache = true)
         {
             if (active)
             {
@@ -201,7 +222,7 @@ namespace ActivateDependencies
             }
 
             mod.Active = active;
-            cache?.Clear();
+            if (clearCache) cache?.Clear();
         }
     }
 }

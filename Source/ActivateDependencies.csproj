@@ -31,6 +31,9 @@
       <HintPath>$(RimWorld)\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="com.rlabrecque.steamworks.net">
+      <HintPath>G:\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+    </Reference>
     <Reference Include="HugsLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UnlimitedHugs.Rimworld.HugsLib.9.0.1\lib\net472\HugsLib.dll</HintPath>
     </Reference>
@@ -55,6 +58,7 @@
     <Compile Include="FindCrossPromotionMods.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ModDependencyInfo.cs" />
+    <Compile Include="ModDependency_Patches.cs" />
     <Compile Include="ModsConfig_Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strings.cs" />

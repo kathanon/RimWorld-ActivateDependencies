@@ -7,23 +7,24 @@ namespace ActivateDependencies
     public class ModDependencyInfo
     {
         private readonly static IEnumerable<ModDependency> emptyList = new List<ModDependency>();
-        private readonly static Dictionary<ModMetaData, ModDependencyInfo> dict = new Dictionary<ModMetaData, ModDependencyInfo>();
+        private readonly static Dictionary<ModMetaData, ModDependencyInfo> info = new Dictionary<ModMetaData, ModDependencyInfo>();
+        private readonly static Dictionary<string, ModMetaData> mods = new Dictionary<string, ModMetaData>();
 
         public readonly static ModDependencyInfo Empty = new ModDependencyInfo();
 
-        public static bool AnyUnfulfilled => Unfulfilled.Any();
+        public static bool AnyToActivate => ToActivate.Any();
 
         private static IEnumerable<ModDependencyInfo> unfulfilledCached;
-        public static IEnumerable<ModDependencyInfo> Unfulfilled
+        public static IEnumerable<ModDependencyInfo> ToActivate
         {
             get
             {
                 if (unfulfilledCached == null)
                 {
                     unfulfilledCached = ModLister.AllInstalledMods
-                        .Where(m => m.Active)
+                        .Where(mod => mod.Active)
                         .Select(For)
-                        .Where(m => !m.DeepSatisfied);
+                        .Where(info => !info.DeepAllActive);
                 }
                 return unfulfilledCached;
             }
@@ -31,16 +32,30 @@ namespace ActivateDependencies
 
         public static void ClearUnfulfilled() => unfulfilledCached = null;
 
-        public static ModDependencyInfo For(ModDependency dep) => For(ModLister.GetModWithIdentifier(dep.packageId, ignorePostfix: true));
+        public static ModDependencyInfo For(ModDependency dep) => For(ModFor(dep?.packageId));
 
         public static ModDependencyInfo For(ModMetaData mod)
         {
             if (mod == null) return Empty;
-            if (!dict.ContainsKey(mod))
+            if (!info.ContainsKey(mod))
             {
-              dict[mod] = new ModDependencyInfo(mod);
+              info[mod] = new ModDependencyInfo(mod);
             }
-            return dict[mod];
+            return info[mod];
+        }
+
+        public static ModMetaData ModFor(ModDependency dep) => ModFor(dep?.packageId);
+
+        public static ModMetaData ModFor(string id)
+        {
+            if (id == null) return null;
+            if (!mods.ContainsKey(id))
+            {
+                var mod = ModLister.GetModWithIdentifier(id, ignorePostfix: true);
+                if (mod == null) return null;
+                mods[id] = mod;
+            }
+            return mods[id];
         }
 
         private List<ModDependency> deepCache;
@@ -62,14 +77,23 @@ namespace ActivateDependencies
             }
         }
 
-        public IEnumerable<ModDependency> Unsatisfied => Direct.Where(dep => !dep.IsSatisfied);
+        public IEnumerable<ModDependency> DirectUnsatisfied => Direct.Where(dep => !dep.IsSatisfied);
         public IEnumerable<ModDependency> DeepUnsatisfied => Deep.Where(dep => !dep.IsSatisfied);
 
-        public bool Satisfied => !Unsatisfied.Any();
+        public bool DirectSatisfied => !DirectUnsatisfied.Any();
         public bool DeepSatisfied => !DeepUnsatisfied.Any();
 
+
+        public IEnumerable<ModDependency> DirectInactive => Direct.Where(dep => dep.Inactive());
+        public IEnumerable<ModDependency> DeepInactive => Deep.Where(dep => dep.Inactive());
+
+        public bool DirectAllActive => !DirectInactive.Any();
+        public bool DeepAllActive => !DeepInactive.Any();
+
+
         public bool Installed => Mod != null;
-        public bool Active => Mod.Active;
+        public bool Active => Mod?.Active ?? false;
+        public bool Inactive => Installed && !Mod.Active;
 
         private void BuildDeep(List<ModDependency> list, HashSet<ModDependency> seen)
         {
@@ -95,5 +119,7 @@ namespace ActivateDependencies
     public static class ModDependencyExtensions
     {
         public static IEnumerable<ModDependency> Unsatisfied(this IEnumerable<ModDependency> input) => input.Where(dep => !dep.IsSatisfied);
+
+        public static bool Inactive(this ModDependency input) => ModDependencyInfo.For(input).Inactive;
     }
 }

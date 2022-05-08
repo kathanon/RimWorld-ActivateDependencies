@@ -1,16 +1,25 @@
 <ModMetaData>
-	<name>Activate Dependencies</name>
+	<name>Activate Mod Dependencies</name>
 	<author>kathanon</author>
     <packageId>kathanon.ActivateDependencies</packageId>
 	<supportedVersions>
 		<li>1.3</li>
 	</supportedVersions>
-	<description>Makes it easier enabling the dependencies of a mod when you have many in the list.</description>
+	<description>Makes it easier to activate the dependencies of a mod when you have many in the list.
+
+Adds several new features to the "Mods" dialog:
+A button that enables all installed dependencies of active mods, and triggers autosort (shown in the image above).
+A checkmark control on the right-hand side, that allows enabling or disabling the selected mod without having to find it in the list.
+A button that enables all installed dependencies of the selected mod (by the "Workshop page" and "Unsubscribe" buttons, only visible if there is anyting for it to do).
+You can now enable and disable mods from the dependencies list, just like in the mods list.
+
+All of the controls in the list above only handles installed but not active mods, they will not help you install any missing ones. However, when clicking on a dependency that is not installed, it will now open in Steam rather than in the browser.
+</description>
 	<url>https://github.com/kathanon/RimWorld-ActivateDependencies</url>
 
 	<modDependencies>
 		<li>
-			<packageId>brrainz.harmony</packageId>
+			<packageId>brrainz.harmony</packageId> 
 			<displayName>Harmony</displayName>
 			<downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
 			<steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
