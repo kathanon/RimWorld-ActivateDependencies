@@ -14,6 +14,8 @@ A button that enables all installed dependencies of the selected mod (by the "Wo
 You can now enable and disable mods from the dependencies list, just like in the mods list.
 
 All of the controls in the list above only handles installed but not active mods, they will not help you install any missing ones. However, when clicking on a dependency that is not installed, it will now open in Steam rather than in the browser.
+
+Chinese Traditional translation by SY1102.
 </description>
 	<url>https://github.com/kathanon/RimWorld-ActivateDependencies</url>
 

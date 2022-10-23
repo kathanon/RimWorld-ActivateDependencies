@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <kathanon.ActivateDependencies.Active>啟用</kathanon.ActivateDependencies.Active>
+  <kathanon.ActivateDependencies.Activate>啟用前置MOD</kathanon.ActivateDependencies.Activate>
+  <kathanon.ActivateDependencies.ActivateAll>啟用所有前置MOD</kathanon.ActivateDependencies.ActivateAll>
+
+  <kathanon.ActivateDependencies.ClickActivate>單擊以啟用。</kathanon.ActivateDependencies.ClickActivate>
+  <kathanon.ActivateDependencies.ClickDeactivate>單擊以停用。</kathanon.ActivateDependencies.ClickDeactivate>
+
+</LanguageData>

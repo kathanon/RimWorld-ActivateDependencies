@@ -2,59 +2,72 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <ModName>ActivateDependencies</ModName>
+    <ModId>kathanon.$(ModName)</ModId>
+    <MultiVersion>true</MultiVersion>
+    <RimWorldVersion>1.3</RimWorldVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{72C3683E-4546-43AF-9F6D-545B0348B5FE}</ProjectGuid>
+    <ProjectGuid>{D7D21B4A-1DA7-41D8-B202-C58CA8FA62AA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ActivateDependencies</RootNamespace>
-    <AssemblyName>ActivateDependencies</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
+  <!-- Import base build file -->
+  <Import Project="RimWorld.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RimWorld>G:\Steam\steamapps\common\RimWorld</RimWorld>
+    <RimWorldVersion>$([System.IO.File]::ReadAllText("$(RimWorld)\Version.txt").Substring(0,3))</RimWorldVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lib.Harmony.2.2.1\lib\net472\0Harmony.dll</HintPath>
+    <!-- RimWorld DLLs -->
+    <Reference Include="Assembly-CSharp" Private="False">
+      <HintPath>$(RimWorldDlls)\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(RimWorld)\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="UnityEngine.CoreModule" Private="False">
+      <HintPath>$(RimWorldDlls)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="com.rlabrecque.steamworks.net">
-      <HintPath>G:\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+    <Reference Include="UnityEngine.IMGUIModule" Private="False">
+      <HintPath>$(RimWorldDlls)\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
-    <Reference Include="HugsLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnlimitedHugs.Rimworld.HugsLib.9.0.1\lib\net472\HugsLib.dll</HintPath>
+    <Reference Include="UnityEngine.TextRenderingModule" Private="False">
+      <HintPath>$(RimWorldDlls)\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UI" Private="False">
+      <HintPath>$(RimWorldDlls)\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="com.rlabrecque.steamworks.net" Private="False">
+      <HintPath>$(RimWorldDlls)\com.rlabrecque.steamworks.net.dll</HintPath>
+    </Reference>
+    <!-- Mod Dlls -->
+    <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL" Private="False">
+      <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net472\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="HugsLib" Private="False">
+      <HintPath>$(HugsLibPath)</HintPath>
+    </Reference>
+    <Reference Include="ModManager" Private="False">
+      <HintPath>$(Workshop)\1507748539\$(RimWorldVersion)\Assemblies\ModManager.dll</HintPath>
+    </Reference>
+    <!-- Other Dlls -->
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
-      <HintPath>$(RimWorld)\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(RimWorld)\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>G:\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
   </ItemGroup>
+  <!-- Project files -->
   <ItemGroup>
+    <None Include="packages.config" />
     <Compile Include="FindCrossPromotionMods.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ModDependencyInfo.cs" />
@@ -63,22 +76,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strings.cs" />
   </ItemGroup>
+  <!-- Include ModFiles -->
   <ItemGroup>
-    <None Include="..\ModFiles\**">
-      <Link>ModFiles\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    <None Include="$(ModFiles)\**" CopyToOutputDirectory="PreserveNewest">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>rmdir /s /q "$(RimWorld)\Mods\$(TargetName)"
-mkdir "$(RimWorld)\Mods\$(TargetName)"
-mkdir "$(RimWorld)\Mods\$(TargetName)\Assemblies"
-copy "$(TargetPath)" "$(RimWorld)\Mods\$(TargetName)\Assemblies"
-xcopy /s "$(SolutionDir)ModFiles\*" "$(RimWorld)\Mods\$(TargetName)"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <StartAction>Program</StartAction>
-    <StartProgram>$(RimWorld)\RimWorldWin64.exe</StartProgram>
-  </PropertyGroup>
 </Project>

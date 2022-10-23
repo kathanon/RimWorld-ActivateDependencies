@@ -14,23 +14,23 @@ namespace ActivateDependencies
 
         public static bool AnyToActivate => ToActivate.Any();
 
-        private static IEnumerable<ModDependencyInfo> unfulfilledCached;
+        private static IEnumerable<ModDependencyInfo> toActivateCached;
         public static IEnumerable<ModDependencyInfo> ToActivate
         {
             get
             {
-                if (unfulfilledCached == null)
+                if (toActivateCached == null)
                 {
-                    unfulfilledCached = ModLister.AllInstalledMods
+                    toActivateCached = ModLister.AllInstalledMods
                         .Where(mod => mod.Active)
                         .Select(For)
                         .Where(info => !info.DeepAllActive);
                 }
-                return unfulfilledCached;
+                return toActivateCached;
             }
         }
 
-        public static void ClearUnfulfilled() => unfulfilledCached = null;
+        public static void ClearUnfulfilled() => toActivateCached = null;
 
         public static ModDependencyInfo For(ModDependency dep) => For(ModFor(dep?.packageId));
 
