@@ -6,7 +6,6 @@ namespace ActivateDependencies
     {
         public const string ID = "kathanon.ActivateDependencies";
         public const string Prefix = ID + ".";
-        public const string CrossPromotionID = "brrainz-crosspromotion";
 
         public static readonly string Active          = (Prefix + "Active"         ).Translate();
         public static readonly string Activate        = (Prefix + "Activate"       ).Translate();
